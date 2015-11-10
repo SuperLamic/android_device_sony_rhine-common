@@ -28,6 +28,9 @@ on init
     symlink /sdcard /mnt/sdcard
     symlink /sdcard /storage/sdcard0
 
+    # Symbols required for SONY blobs
+    export LD_SHIM_LIBS "/system/lib/libcammw.so|libshim_cald.so:/system/lib/hw/camera.qcom.so|libshim_camera.so"
+
     mkdir /tmp
     mount tmpfs tmpfs /tmp nosuid mode=0755,uid=0,gid=0
     chmod 0664 /proc/rdtag
