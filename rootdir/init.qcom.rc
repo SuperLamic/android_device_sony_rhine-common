@@ -25,7 +25,6 @@ on early-init
 
 on init
     # for backwards compatibility
-    symlink /sdcard /mnt/sdcard
     symlink /sdcard /storage/sdcard0
 
     # Symbols required for SONY blobs
