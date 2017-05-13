@@ -214,4 +214,4 @@ PRODUCT_PROPERTY_OVERRIDES += \
 $(call inherit-product, frameworks/native/build/phone-xxhdpi-2048-hwui-memory.mk)
 
 # Include non-opensource parts
-$(call inherit-product, vendor/sony/rhine-common/rhine-common-vendor.mk)
+#$(call inherit-product, vendor/sony/rhine-common/rhine-common-vendor.mk)
