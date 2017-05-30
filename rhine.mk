@@ -80,6 +80,11 @@ PRODUCT_PACKAGES += \
     FM2 \
     FMRecord
 
+# Camera
+PRODUCT_PACKAGES += \
+    libshim_cald \
+    libshim_camera
+
 # IPC Security Config
 PRODUCT_COPY_FILES += \
     $(COMMON_PATH)/rootdir/system/etc/sec_config:system/etc/sec_config
