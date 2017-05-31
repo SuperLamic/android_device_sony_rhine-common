@@ -24,6 +24,10 @@ on early-init
     chown system system /sys/kernel/debug/kgsl/proc
 
 on init
+    # SONY: Start the TrimArea Daemon. It must be started before fota-ua
+    class_start trimarea
+    exec /sbin/wait4tad_static
+
     # Enable subsystem restart
     write /sys/module/subsystem_restart/parameters/enable_ramdumps 0
     write /sys/bus/msm_subsys/devices/subsys0/restart_level "RELATED"
@@ -71,6 +75,11 @@ on fs
     mount_all ./fstab.qcom
     setprop ro.crypto.fuse_sdcard true
 
+    chown idd idd /mnt/idd
+    chmod 0751 /mnt/idd
+    exec /system/bin/rm -r /mnt/idd/lost+found
+    mkdir /mnt/idd/lost+found 0770 root root
+
     mkdir /lta-label 0555 system system
     wait /dev/block/platform/msm_sdcc.1/by-name/LTALabel
     mount ext4 /dev/block/platform/msm_sdcc.1/by-name/LTALabel /lta-label nosuid nodev noatime noexec ro barrier=0
@@ -82,6 +91,9 @@ on fs
     write /sys/module/lowmemorykiller/parameters/vmpressure_file_min 53059
 
 on early-boot
+    start ta_qmi_service
+    start sct_service
+
     # set RLIMIT_MEMLOCK to 64MB
     setrlimit 8 67108864 67108864
 
@@ -276,9 +288,18 @@ on post-fs
     # Change to socket location on libkeyctrl/suntory for /data encryption
     mkdir /dev/socket/suntory 0755 system system
 
+    # create directory for scd
+    mkdir /dev/socket/scd 0755 system system
+    mkdir /data/scd 0755 system system
+
+
 # msm specific files that need to be created on /data
 on post-fs-data
+    # SONY: Start early TA-users
+    mkdir /data/etc 0755 root shell
+    exec /system/bin/taimport
 
+    mkdir /data/credmgr 0770 system credmgr_client
     mkdir /data/media 0770 media_rw media_rw
 
     # Create the directories used by the Wireless subsystem
@@ -368,6 +389,20 @@ on post-fs-data
     chown media camera /sys/devices/sony_camera_1/info
     chmod 0770 /sys/devices/sony_camera_1/info
 
+    # SONY: Import MiscTA to System properties
+    exec /system/bin/taimport property
+
+    # taimport ready, use this as trigger for multi-cdf-symlinker
+    setprop init.taimport.ready true
+
+    exec /system/bin/rm -r /mnt/idd/lost+found
+    
+    mkdir /mnt/idd/lost+found 0770 root root
+    mkdir /mnt/idd/output 0755 idd idd
+    mkdir /mnt/idd/socket 0711 idd idd
+    
+    restorecon_recursive /mnt/idd
+
 service hciattach /system/bin/sh /system/etc/init.qcom.bt.sh
     class late_start
     user bluetooth
@@ -389,11 +424,24 @@ service qmuxd /system/bin/qmuxd
 
 # SONY: TrimArea Daemon
 # Last 2 args: start block(blk size 128k), number of blocks(partitionsize(kb)/128(kb))
-service tad_static /system/bin/tad_static /dev/block/mmcblk0 1,16
+service tad_static /sbin/tad_static /dev/block/platform/msm_sdcc.1/by-name/TA 0,16
     user root
     group root
-    socket tad stream 0660 system system
-    class core
+    socket tad stream 0660 system trimarea
+    class trimarea
+    seclabel u:r:tad:s0
+
+service updatemiscta /system/bin/updatemiscta
+    class main
+    user updatemiscta
+    group trimarea
+    oneshot
+
+# Trim Area QMI service
+service ta_qmi_service /system/bin/ta_qmi_service
+    user ta_qmi
+    group ta_qmi trimarea system root net_raw
+    disabled
 
 # Wi-Fi and BT MAC addresses
 service macaddrsetup /system/bin/macaddrsetup /sys/devices/fb000000.qcom,wcnss-wlan/wcnss_mac_addr
@@ -403,6 +451,11 @@ service macaddrsetup /system/bin/macaddrsetup /sys/devices/fb000000.qcom,wcnss-w
 
 service netmgrd /system/bin/netmgrd
     class main
+
+service iddd /system/bin/iddd
+    class main
+    user idd
+    group idd log inet
 
 service qseecomd /system/bin/qseecomd
     class core
@@ -480,25 +533,37 @@ service fm_dl /system/bin/sh /system/etc/init.qcom.fm.sh
     oneshot
 
 service scd /system/bin/scd
-    class main
+    class late_start
     user system
     group system
 
 # Secure Config Transfer service
-service sct_service /system/bin/sct_service
-    user root
-    class main
-
-# Trim Area QMI service
 service ta_qmi_service /system/bin/ta_qmi_service
-    user root
-    class main
+    user ta_qmi
+    group ta_qmi trimarea system root net_raw
+    disabled
 
 # Thermal Manager service
 service thermanager /system/bin/thermanager /system/etc/thermanager.xml
     class main
     user root
     group root
+
+# Note! that there is a dependency towards taimport property
+# the property is set immediatly after execution of taimport.
+on property:init.taimport.ready=true
+    mkdir /data/customization
+    chown system system /data/customization
+    restorecon /data/customization
+    start config-linker
+
+# set up symbolic links to proper configuration file
+service config-linker /system/bin/multi-cdf-symlinker.sh
+    class main
+    user system
+    group system
+    disabled
+    oneshot
 
 service rmt_storage /system/bin/rmt_storage
     class core
@@ -508,6 +573,12 @@ service irsc_util /system/bin/irsc_util "/etc/sec_config"
     class main
     user root
     oneshot
+
+service credmgrd /system/bin/credmgrd
+    user system
+    group credmgr_client
+    socket credmgr stream 0660 system credmgr_client
+    class main
 
 service qcamerasvr /system/bin/mm-qcamera-daemon
     class late_start
@@ -536,6 +607,39 @@ service ptt_socket_app /system/bin/ptt_socket_app
     user system
     group system
     oneshot
+
+service imsqmidaemon /system/bin/imsqmidaemon
+    class main
+    user system
+    socket ims_qmid stream 0660 system radio
+    group radio net_raw log qcom_diag
+
+service imsdatadaemon /system/bin/imsdatadaemon
+    class main
+    user system
+    socket ims_datad stream 0660 system radio
+    group system wifi radio inet net_raw log qcom_diag net_admin
+    disabled
+
+on property:sys.ims.QMI_DAEMON_STATUS=1
+    start imsdatadaemon
+
+service ims_rtp_daemon /system/bin/ims_rtp_daemon
+   class main
+   user system
+   socket ims_rtpd stream 0660 system radio
+   group radio net_raw diag qcom_diag log
+   disabled
+
+service imscmservice /system/bin/imscmservice
+   class main
+   user system
+   group radio net_raw diag qcom_diag log
+   disabled
+
+on property:sys.ims.DATA_DAEMON_STATUS=1
+   start ims_rtp_daemon
+   start imscmservice
 
 service charger /sbin/healthd -c
     class charger
