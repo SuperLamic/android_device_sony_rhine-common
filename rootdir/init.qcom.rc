@@ -449,6 +449,10 @@ service macaddrsetup /system/bin/macaddrsetup /sys/devices/fb000000.qcom,wcnss-w
     user root
     oneshot
 
+service sct_service /system/bin/sct_service
+    user root
+    disabled
+
 service netmgrd /system/bin/netmgrd
     class main
 
