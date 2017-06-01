@@ -75,10 +75,14 @@ on fs
     mount_all ./fstab.qcom
     setprop ro.crypto.fuse_sdcard true
 
-    chown idd idd /mnt/idd
-    chmod 0751 /mnt/idd
-    exec /system/bin/rm -r /mnt/idd/lost+found
-    mkdir /mnt/idd/lost+found 0770 root root
+    chown idd idd /idd
+    chmod 0751 /idd
+    exec /system/bin/rm -r /idd/lost+found
+    mkdir /idd/lost+found 0770 root root
+
+    wait /dev/block/mmcblk0p1
+    chown tad tad /dev/block/mmcblk0p1
+    chmod 0770 /dev/block/mmcblk0p1
 
     mkdir /lta-label 0555 system system
     wait /dev/block/platform/msm_sdcc.1/by-name/LTALabel
@@ -400,7 +404,7 @@ on post-fs-data
     mkdir /mnt/idd/lost+found 0770 root root
     mkdir /mnt/idd/output 0755 idd idd
     mkdir /mnt/idd/socket 0711 idd idd
-    
+    	
     restorecon_recursive /mnt/idd
 
 service hciattach /system/bin/sh /system/etc/init.qcom.bt.sh
