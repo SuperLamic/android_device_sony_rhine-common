@@ -80,7 +80,10 @@ PRODUCT_PACKAGES += \
 # Camera
 PRODUCT_PACKAGES += \
     libshim_cald \
-    libshim_camera
+    libshim_camera \
+    libshims_wvm \
+    libshims_signal \
+    libshims_idd
 
 # GPS
 PRODUCT_COPY_FILES += \
