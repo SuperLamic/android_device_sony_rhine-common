@@ -83,7 +83,9 @@ PRODUCT_PACKAGES += \
     libshim_camera \
     libshims_wvm \
     libshims_signal \
-    libshims_idd
+    libshims_idd \
+    libshims_cam \
+    libsonycamera
 
 PRODUCT_COPY_FILES += \
     $(COMMON_PATH)/rootdir/system/bin/credmgrfirstboot.sh:system/bin/credmgrfirstboot.sh
