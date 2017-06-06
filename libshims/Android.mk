@@ -98,3 +98,21 @@ LOCAL_MODULE := libshims_idd
 LOCAL_MODULE_TAGS := optional
 LOCAL_32_BIT_ONLY := true
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := \
+    camera.c
+
+LOCAL_SHARED_LIBRARIES := libutils
+LOCAL_MODULE := libshims_cam
+LOCAL_MODULE_TAGS := optional
+include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := libsonycamera.cpp
+LOCAL_MODULE := libsonycamera
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE_CLASS := SHARED_LIBRARIES
+LOCAL_SHARED_LIBRARIES := liblog
+LOCAL_32_BIT_ONLY := true
+include $(BUILD_SHARED_LIBRARY)
