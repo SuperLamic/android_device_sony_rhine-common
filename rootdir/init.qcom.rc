@@ -31,7 +31,7 @@ on init
     symlink /sdcard /storage/sdcard0
 
     # Symbols required for SONY blobs
-    export LD_SHIM_LIBS "/system/lib/libcammw.so|libshim_cald.so:/system/lib/hw/camera.qcom.so|libshim_camera.so:/system/bin/mm-qcamera-daemon|libshim_camera.so"
+    export LD_SHIM_LIBS "/system/lib/libcammw.so|libshim_cald.so:/system/lib/hw/camera.qcom.so|libshim_camera.so"
 
     mkdir /tmp
     mount tmpfs tmpfs /tmp nosuid mode=0755,uid=0,gid=0
@@ -44,9 +44,6 @@ on init
     wait /dev/block/mmcblk0p1
     chown tad tad /dev/block/mmcblk0p1
     chmod 0770 /dev/block/mmcblk0p1
-
-    # create directory for scd
-    mkdir /dev/socket/scd 0755 system system
 
     # Enable ramdumps from subsystems to dump
     # Should be initialized during init
@@ -310,6 +307,9 @@ on post-fs-data
     # Create directory used by audio subsystem
     mkdir /data/misc/audio 0770 audio audio
 
+    # Create /data/time folder for time-services
+    mkdir /data/time/ 0700 system system
+
     # IR Blaster
     chown system system /dev/ttyHSL2
     chmod 0660 /dev/ttyHSL2
@@ -421,17 +421,13 @@ service macaddrsetup /system/bin/macaddrsetup /sys/devices/fb000000.qcom,wcnss-w
     user root
     oneshot
 
-service sct_service /system/bin/sct_service
-    user root
-    disabled
-
 service netmgrd /system/bin/netmgrd
     class late_start
 
 service qseecomd /system/bin/qseecomd
     class core
     user root
-    group drmrpc root
+    group drmpc root
 
 service hw_config /system/bin/sh /system/etc/hw_config.sh
     class main
@@ -477,21 +473,6 @@ service mpdecision /system/bin/mpdecision --avg_comp
     group system
     disabled
 
-# Start suntrold
-service suntrold /system/bin/suntrold
-    user system
-    group system
-    oneshot
-    class main
-
-# bugreport is triggered by holding down volume down, volume up and power
-service bugreport /system/bin/dumpstate -d -p -B \
-        -o /data/data/com.android.shell/files/bugreports/bugreport
-    class main
-    disabled
-    oneshot
-    keycodes 114 115 116
-
 service loc_launcher /system/bin/loc_launcher
     #loc_launcher will start as root and set its uid to gps
     class late_start
@@ -523,11 +504,6 @@ service fm_dl /system/bin/sh /system/etc/init.qcom.fm.sh
     group system
     disabled
     oneshot
-
-service scd /system/bin/scd
-    class main
-    user system
-    group system
 
 # Thermal Manager service
 service thermanager /system/bin/thermanager /system/etc/thermanager.xml
