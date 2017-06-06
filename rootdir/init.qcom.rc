@@ -413,7 +413,7 @@ on property:bluetooth.hciattach=false
 service qmuxd /system/bin/qmuxd
     class main
     user root
-    group radio audio bluetooth gps nfc diag qcom_diag
+    group radio audio bluetooth gps nfc diag wakelock qcom_diag
 
 # Wi-Fi and BT MAC addresses
 service macaddrsetup /system/bin/macaddrsetup /sys/devices/fb000000.qcom,wcnss-wlan/wcnss_mac_addr
@@ -427,7 +427,7 @@ service netmgrd /system/bin/netmgrd
 service qseecomd /system/bin/qseecomd
     class core
     user root
-    group drmpc root
+    group drmrpc root
 
 service hw_config /system/bin/sh /system/etc/hw_config.sh
     class main
@@ -524,7 +524,7 @@ service irsc_util /system/bin/irsc_util "/etc/sec_config"
 service sensors /system/bin/sensors.qcom
     class main
     user root
-    group sensors radio system
+    group sensors radio system wakelock
 
 service wcnss-service /system/bin/wcnss_service
     class late_start
