@@ -128,10 +128,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     nfc.qcom
 
-# BoringSSL hacks
-PRODUCT_PACKAGES += \
-    libboringssl-compat
-
 PRODUCT_PACKAGES += \
     libnfc \
     libnfc_jni \
