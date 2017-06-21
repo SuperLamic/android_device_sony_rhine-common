@@ -22,6 +22,7 @@ on init
 :/system/lib/hw/camera.qcom.so|libsonycamera.so \
 :/system/lib/hw/camera.qcom.so|libshims_cam.so \
 :/system/bin/mm-qcamera-daemon|libshims_cam.so \
+:/system/bin/iddd|libboringssl-compat.so \
 :/system/lib/libcammw.so|libshim_cald.so \
 :/system/lib/hw/camera.qcom.so|libshim_camera.so \
 "
