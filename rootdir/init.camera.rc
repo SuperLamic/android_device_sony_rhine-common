@@ -15,14 +15,14 @@
 #
 
 on init
+    # BoringSSL hacks
+    export LD_PRELOAD "libboringssl-compat.so"
+
 	export LD_SHIM_LIBS " \
 /system/bin/credmgrd|libshims_signal.so \
 :/system/bin/iddd|libshims_idd.so \
 :/system/bin/suntrold|libshims_signal.so \
 :/system/lib/hw/camera.qcom.so|libsonycamera.so \
-:/system/lib/hw/camera.qcom.so|libshims_cam.so \
-:/system/bin/mm-qcamera-daemon|libshims_cam.so \
-:/system/bin/iddd|libboringssl-compat.so \
 :/system/lib/libcammw.so|libshim_cald.so \
 :/system/lib/hw/camera.qcom.so|libshim_camera.so \
 "
